@@ -1,0 +1,6 @@
+openai
+langchain
+python
+ollama
+langchain_community
+chromadb
