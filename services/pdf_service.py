@@ -1,6 +1,6 @@
 import os
 from werkzeug.utils import secure_filename
-from transformers.pdf_to_text import PDFTextConverter
+from util.pdf_to_text import PDFTextConverter
 
 class PDFService:
     def __init__(self, upload_folder, allowed_extensions):

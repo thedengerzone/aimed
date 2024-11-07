@@ -33,7 +33,7 @@ class ChromaDBHandler:
         metadata = data.get("metadata", {})  # Optional metadata
 
         collection.add(documents=[{
-
+            "id": doc_id,
             "content": content,
             "metadata": metadata
         }])
