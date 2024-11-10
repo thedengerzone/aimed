@@ -1,6 +1,6 @@
 import os
+import logging
 from flask import Flask
-
 from container.config import Container
 from controllers.retrival_controller import RetrievalController
 from controllers.upload_controller import UploadController
@@ -29,5 +29,14 @@ def create_app() -> Flask:
     return flask
 
 if __name__ == '__main__':
+    # Configure logging globally
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger()
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
+
     app = create_app()
     app.run(debug=True)

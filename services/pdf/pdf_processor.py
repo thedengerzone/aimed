@@ -3,9 +3,11 @@ import logging
 import os
 import threading
 import time
+
 from services.pdf.pdf_service import PDFService
 
 logger = logging.getLogger(__name__)
+
 
 class PDFProcessor:
     def __init__(self, pdf_service: PDFService,
@@ -26,7 +28,7 @@ class PDFProcessor:
                     logger.info(f"Processing file: {filename}")
                     self.pdf_service.process_pdf(file_path, filename)
                     os.remove(file_path)  # Remove the file after processing
-            time.sleep(60)  # Check for new files every 1 minute
+            time.sleep(10)
 
     def stop(self):
         self.stop_event.set()

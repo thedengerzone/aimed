@@ -1,5 +1,7 @@
 import logging
+
 from flask import Blueprint, request, jsonify
+
 
 class UploadController:
     def __init__(self, pdf_service):

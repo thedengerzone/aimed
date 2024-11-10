@@ -1,6 +1,5 @@
 import logging
 import os
-
 import chromadb
 from chromadb.api.types import IncludeEnum
 from chromadb.config import Settings
@@ -8,7 +7,9 @@ from chromadb.config import Settings
 logger = logging.getLogger(__name__)
 
 class ChromaDBHandler:
-    def __init__(self, host=os.environ.get("DB_HOST"), port=int(os.environ.get("DB_PORT")), auth_token=os.environ.get("AUTH_TOKEN")):
+    def __init__(self, host=os.environ.get("DB_HOST"),
+                 port=int(os.environ.get("DB_PORT")),
+                 auth_token=os.environ.get("AUTH_TOKEN")):
         self.client = chromadb.HttpClient(
             host=host,
             port=port,
@@ -22,18 +23,18 @@ class ChromaDBHandler:
     def get_or_create_collection(self, collection_id):
         collections = self.client.list_collections()
         if collection_id not in [col.name for col in collections]:
-            self.client.create_collection(collection_id)
+            self.client.create_collection(collection_id,
+                                          metadata={"hnsw:space": "cosine"})
         return self.client.get_collection(collection_id)
 
-    # Store a document in the database
-    def store_page_embedding(self, document_id, content, page_embedding):
-        collection = self.get_or_create_collection(document_id)
+    def store_embedding(self, collection_name, document_id, content, embeddings, metadata):
+        collection = self.get_or_create_collection(collection_name)
         collection.upsert(
-            ids=[document_id],
-            embeddings=[page_embedding],
-            documents=[content]
+            ids=document_id,
+            embeddings=embeddings,
+            documents=content,
+            metadatas=metadata
         )
-        logger.info(f"Stored PDF document {document_id} in ChromaDB.")
 
     # Retrieve a document by ID
     def retrieve_from_database(self, collection_name, doc_id):
@@ -60,11 +61,13 @@ class ChromaDBHandler:
     # Perform a similarity search based on a query
     def similarity_search(self, collection_name, query_embedding, top_k=3):
         collection = self.get_or_create_collection(collection_name)
-        results = collection.query(query_embedding, n_results=top_k, include=[IncludeEnum.documents])
+        results = collection.query(query_embedding, n_results=top_k,
+                                   include=[IncludeEnum.documents])
         return results['documents']
 
     # Get similarity scores based on a query
-    def get_similarity_score(self, collection_name, query_embedding, top_k=5):
+    def get_similarity_score(self, collection_name, query_embedding, top_k=3):
         collection = self.get_or_create_collection(collection_name)
-        results = collection.query(query_embedding, n_results=top_k,include=[IncludeEnum.distances])
+        results = collection.query(query_embedding, n_results=top_k,
+                                   include=[IncludeEnum.documents,IncludeEnum.distances])
         return results['distances']

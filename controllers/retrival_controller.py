@@ -1,5 +1,7 @@
 import logging
+
 from flask import Blueprint, request, jsonify
+
 
 class RetrievalController:
     def __init__(self, retrieval_service):

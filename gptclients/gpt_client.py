@@ -2,14 +2,14 @@ import json
 import logging
 import os
 
-from langchain_ollama import ChatOllama
+from openai import AzureOpenAI
 
 logger = logging.getLogger(__name__)
 
 
-class OllamaClient:
+class AzureClient:
     def __init__(self):
-        self.gpt = ChatOllama(model=os.environ.get("MODEL_NAME"), temperature=1)
+        self.gpt = AzureOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("ENDPOINT"), api_version="2024-02-01")
 
     def generate_response(self, prompt, content):
         prompt = f"""
