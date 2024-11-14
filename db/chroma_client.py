@@ -27,11 +27,10 @@ class ChromaDBHandler:
                                           metadata={"hnsw:space": "cosine"})
         return self.client.get_collection(collection_id)
 
-    def store_embedding(self, collection_name, document_id, content, embeddings, metadata):
+    def store_embedding(self, collection_name, document_id, content, metadata):
         collection = self.get_or_create_collection(collection_name)
         collection.upsert(
             ids=document_id,
-            embeddings=embeddings,
             documents=content,
             metadatas=metadata
         )
@@ -62,11 +61,11 @@ class ChromaDBHandler:
     def similarity_search(self, collection_name, query_embedding, top_k=3):
         collection = self.get_or_create_collection(collection_name)
         results = collection.query(query_embedding, n_results=top_k,
-                                   include=[IncludeEnum.documents])
-        return results['documents']
+                                   include=[IncludeEnum.documents,IncludeEnum.distances])
+        return results
 
     # Get similarity scores based on a query
-    def get_similarity_score(self, collection_name, query_embedding, top_k=3):
+    def get_similarity_score(self, collection_name, query_embedding, top_k=1):
         collection = self.get_or_create_collection(collection_name)
         results = collection.query(query_embedding, n_results=top_k,
                                    include=[IncludeEnum.documents,IncludeEnum.distances])
