@@ -6,6 +6,7 @@ from langchain_text_splitters import MarkdownTextSplitter, SentenceTransformersT
 
 logger = logging.getLogger(__name__)
 
+
 def sanitize_file_name(file_name):
     pattern = r'[^a-zA-Z0-9_\-\.]'
     sanitized = re.sub(pattern, '_', file_name) or 'file'
@@ -13,17 +14,19 @@ def sanitize_file_name(file_name):
         logger.warning(f"Sanitized filename was empty; defaulting to 'file'. Original filename: '{file_name}'")
     return sanitized
 
+
 def clean_text(text):
     text = re.sub(r'[-#*]{2,}', '', text)
     text = re.sub(r'\s+', ' ', text).strip()
     return text
 
+
 class PDFTextConverter:
-    def __init__(self, embeddings_model, chroma_client):
-        self.embeddings_model = embeddings_model
+    def __init__(self, chroma_client, gpt_client):
         self.chroma_client = chroma_client
-        self.text_splitter = MarkdownTextSplitter(chunk_size=5000, chunk_overlap=500)
+        self.text_splitter = MarkdownTextSplitter(chunk_size=8000, chunk_overlap=500)
         self.token_splitter = SentenceTransformersTokenTextSplitter(chunk_overlap=0, tokens_per_chunk=256)
+        self.gpt_client = gpt_client
 
     def preprocess_file(self, pdf_path, filename):
         pages = pymupdf4llm.to_markdown(pdf_path)
@@ -33,7 +36,8 @@ class PDFTextConverter:
 
         def process_chunk(chunk_number, chunk):
             chunk_id = f"{sanitize_file_name(filename)}_chunk_{chunk_number}"
-            token_text = self.token_splitter.split_text(chunk.page_content)
+            translated_chunk = self.gpt_client.translate_to_english(chunk.page_content)
+            embedding = self.gpt_client.get_embedding(translated_chunk)
 
             metadata = {
                 "filename": filename,
@@ -46,7 +50,8 @@ class PDFTextConverter:
             self.chroma_client.store_embedding(
                 collection_name=filename,
                 document_id=chunk_id,
-                content=token_text,
+                embeddings=embedding,
+                content=chunk.page_content,
                 metadata=metadata
             )
 
@@ -56,5 +61,6 @@ class PDFTextConverter:
             concurrent.futures.wait(futures, timeout=1000)
 
         logger.info(f"Completed processing for {filename}")
+
 
 logging.basicConfig(level=logging.INFO)

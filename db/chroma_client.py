@@ -27,11 +27,12 @@ class ChromaDBHandler:
                                           metadata={"hnsw:space": "cosine"})
         return self.client.get_collection(collection_id)
 
-    def store_embedding(self, collection_name, document_id, content, metadata):
+    def store_embedding(self, collection_name, document_id, content, embeddings, metadata):
         collection = self.get_or_create_collection(collection_name)
         collection.upsert(
             ids=document_id,
             documents=content,
+            embeddings=embeddings,
             metadatas=metadata
         )
 

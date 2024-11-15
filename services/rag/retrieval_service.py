@@ -5,8 +5,7 @@ from chromadb.utils.embedding_functions.sentence_transformer_embedding_function 
 
 
 class RetrievalService:
-    def __init__(self, chroma_client, embeddings_model, gpt_client):
-        self.embeddings_model = embeddings_model
+    def __init__(self, chroma_client, gpt_client):
         self.chroma_client = chroma_client
         self.gpt_client = gpt_client
         self.embedding_function = SentenceTransformerEmbeddingFunction()

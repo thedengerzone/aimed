@@ -1,6 +1,5 @@
 openai~=1.54.2
 langchain
-python
 ollama~=0.3.3
 langchain_community
 chromadb~=0.5.18
@@ -15,8 +14,6 @@ flask
 spacy~=3.8.2
 llama-parse
 langchain-unstructured
-python-magic-bin
-
 pymupdf4llm~=0.0.17
 langchain-text-splitters~=0.3.2
 numpy~=2.0.2

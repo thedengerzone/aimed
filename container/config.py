@@ -1,12 +1,9 @@
 import logging
-import os
 
-import spacy
 from dependency_injector import containers, providers
-from langchain_ollama import OllamaEmbeddings
 
 from db.chroma_client import ChromaDBHandler
-from gptclients.ollama import OllamaClient
+from gptclients.gpt_client import OpenAIClient
 from services.pdf.pdf_processor import PDFProcessor
 from services.pdf.pdf_service import PDFService
 from services.rag.retrieval_service import RetrievalService
@@ -16,14 +13,10 @@ from util.pdf_to_text import PDFTextConverter
 class Container(containers.DeclarativeContainer):
     config = providers.Configuration()
     logger = providers.Singleton(logging.getLogger, __name__)
-    embeddings = providers.Factory(OllamaEmbeddings,
-                                   model="nomic-embed-text")
-    gpt_client = providers.Singleton(OllamaClient)
+    gpt_client = providers.Singleton(OpenAIClient)
     chroma = providers.Singleton(ChromaDBHandler)
-    retrieval_service = providers.Factory(RetrievalService, chroma_client=chroma,
-                                          embeddings_model=embeddings, gpt_client=gpt_client)
-    converter = providers.Factory(PDFTextConverter, chroma_client=chroma,
-                                  embeddings_model=embeddings)
+    retrieval_service = providers.Factory(RetrievalService, chroma_client=chroma, gpt_client=gpt_client)
+    converter = providers.Factory(PDFTextConverter, chroma_client=chroma,gpt_client=gpt_client)
     pdf_service = providers.Factory(
         PDFService,
         converter=converter,

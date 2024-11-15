@@ -1,31 +1,31 @@
 import json
 import logging
 import os
-
-from openai import AzureOpenAI
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
 
-class AzureClient:
+class OpenAIClient:
     def __init__(self):
-        self.gpt = AzureOpenAI(api_key=os.getenv("OPENAI_API_KEY"), base_url=os.getenv("ENDPOINT"), api_version="2024-02-01")
+        self.gpt = OpenAI(api_key=os.getenv("OPENAI_API_KEY"), project=os.getenv("OPEN_AI_PROJECT_ID"))
 
-    def generate_response(self, prompt, content):
-        prompt = f"""
-    Vi ste AI pomoćnik. Korisnik je postavio sljedeće pitanje: "{prompt}".
-    Iz baze smo izvukli sljedeće informacije o pitanju: "{content}".
-    Kreiraj 1 odgovor na postavljeno pitanje.
-
-    Primjer izlaza:
-        {{
-            "response": 
-                "Odgovor"
-        }}
-    """
-
+    def translate_to_english(self, content):
         try:
-            response = self.gpt.invoke(input=prompt, format="json")
+            response = self.gpt.chat.completions.create(
+                model="gpt-4o",
+                temperature=0,
+                response_format={ "type": "json_object" },
+                messages=[
+                    {"role": "system",
+                     "content": "You are a helpful assistant tasked with translating Croatian text into English. The translations will be used for vector embeddings, so the output must be accurate and returned in JSON format."},
+                    {
+                        "role": "user",
+                        "content": content
+                    }
+                ]
+
+            )
         except Exception as e:
             print(f"Error: {e}")
 
@@ -39,32 +39,32 @@ class AzureClient:
             logger.error(f"Error generating response: {e}")
             return None
 
-    def generate_multiple_prompts_from_request(self, content):
-        prompt = f"""
-                    Vi ste AI pomoćnik. Korisnik je postavio sljedeće pitanje: "{content}".
-                    Molimo generirajte 5 sličnih pitanja koja se mogu koristiti za pretragu relevantnih informacija u bazi podataka.
-                    Izlaz treba biti u JSON formatu kao niz pitanja.
-
-                    Primjer izlaza:
-                        "questions": [
-                            "Povezano pitanje 1",
-                            "Povezano pitanje 2",
-                            "Povezano pitanje 3"
-                        ]
-                    """
+    def generate_response(self, content):
         try:
-            response = self.gpt.invoke(input=prompt, format="json")
+            response = self.gpt.chat.completions.create(
+                model="gpt-4o",
+                temperature=0,
+                messages=[
+                    {"role": "system", "content": "You are helpful assistant which is translating croatian text to english."},
+                    {
+                        "role": "user",
+                        "content": content
+                    }
+                ]
+            )
+        except Exception as e:
+            print(f"Error: {e}")
+
             logger.info(f"Response: {response}")
-            if response.content:
-                try:
-                    questions = json.loads(response.content)
-                    return questions
-                except json.JSONDecodeError:
-                    logger.error("Failed to decode JSON from response")
-                    return None
+            if 'message' in response and 'content' in response['message']:
+                return response['message']['content']
             else:
                 logger.error(f"Unexpected response format: {response}")
                 return None
         except Exception as e:
-            logger.error(f"Error generating multiple prompts: {e}")
+            logger.error(f"Error generating response: {e}")
             return None
+
+    def get_embedding(self, text):
+        response =  self.gpt.embeddings.create(model="text-embedding-3-large", input=text)
+        return response['data']
